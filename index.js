@@ -39,12 +39,6 @@ io.use(async (socket, next) => {
   }
 });
 
-// const client = Redis.createClient({
-//   host: process.env.REDIS_URL,
-//   port: process.env.REDIS_PORT,
-//   password: process.env.REDIS_PASS,
-// });
-
 const client = new Redis(process.env.REDIS_URL);
 
 io.on("connection", async (socket) => {
@@ -56,32 +50,32 @@ io.on("connection", async (socket) => {
     let list = await io.in(classid).fetchSockets();
     let userlist = list.map((sock) => sock.user);
     io.to(classid).emit("livelist", userlist);
+
+    client.lrange(`messages:${classid}`, "0", "-1", (err, data) => {
+      let messageslist = data.map((item) => JSON.parse(item));
+      console.log("all msgs", messageslist);
+      io.to(socket.id).emit("intmsgslist", messageslist);
+    });
+
     // console.log(`${socket.user.umailid} joined class ${classid}`);
   });
 
-  socket.on("sendMsg", ({ classid, txt }) => {
+  socket.on("sendMsg", ({ classid, text }) => {
     const msgid = randomUUID();
     let { ufname, uimage, umailid, userid } = socket.user;
-    let message = JSON.stringify({
+    let message = {
       msgid,
-      txt,
+      text,
       from: { ufname, uimage, umailid, userid },
-    });
-    console.log(message);
-    client.lpush(`messages:${classid}`, message, (err) => {
+      time: new Date(),
+    };
+    console.log("Single message", JSON.stringify(message));
+    client.rpush(`messages:${classid}`, JSON.stringify(message), (err) => {
       if (err) {
         console.log("unable to save in redis: ", err);
       }
-      socket.to(classid).emit("recMsg", { txt, from: socket.user, msgid });
+      socket.to(classid).emit("recMsg", message);
     });
-  });
-
-  socket.on("input-change", (code) => {
-    socket.broadcast.emit("update-input", code);
-  });
-
-  socket.on("chat", (msg) => {
-    console.log("chat recieved", msg);
   });
 
   socket.on("disconnect", async () => {
