@@ -41,6 +41,26 @@ io.use(async (socket, next) => {
 
 const client = new Redis(process.env.REDIS_URL);
 
+const handlegetliverooms = () => {
+  var availableRooms = [];
+  var rooms = io.sockets.adapter.rooms;
+  for (const [key, value] of rooms) {
+    if (value instanceof Set) {
+      availableRooms.push({ key, value: Array.from(value) });
+    }
+  }
+
+  let liverooms = availableRooms.filter((room) => {
+    if (room.value.length > 1) {
+      return room;
+    } else if (room.value.length == 1 && room.key != room.value[0]) {
+      return room;
+    }
+  });
+  // console.log("live", liverooms);
+  return liverooms;
+};
+
 io.on("connection", async (socket) => {
   socket.emit("me", socket.id);
 
@@ -51,10 +71,12 @@ io.on("connection", async (socket) => {
     let userlist = list.map((sock) => sock.user);
     io.to(classid).emit("livelist", userlist);
 
-    client.lrange(`messages:${classid}`, "0", "-1", (err, data) => {
-      let messageslist = data.map((item) => JSON.parse(item));
-      console.log("all msgs", messageslist);
-      io.to(socket.id).emit("intmsgslist", messageslist);
+    client.hgetall(`messages:${classid}`, (err, res) => {
+      if (err) {
+        console.log(err);
+      } else {
+        io.to(socket.id).emit("intmsgslist", res);
+      }
     });
 
     // console.log(`${socket.user.umailid} joined class ${classid}`);
@@ -68,14 +90,45 @@ io.on("connection", async (socket) => {
       text,
       from: { ufname, uimage, umailid, userid },
       time: new Date(),
+      upvotes: [],
     };
-    console.log("Single message", JSON.stringify(message));
-    client.rpush(`messages:${classid}`, JSON.stringify(message), (err) => {
-      if (err) {
-        console.log("unable to save in redis: ", err);
+    // using hset
+    client.hset(
+      `messages:${classid}`,
+      msgid,
+      JSON.stringify(message),
+      (err, res) => {
+        if (err) {
+          console.log(err);
+        } else {
+          io.to(classid).emit("recMsg", message);
+        }
       }
-      socket.to(classid).emit("recMsg", message);
-    });
+    );
+  });
+
+  socket.on("getliverooms", () => {
+    socket.emit("liverooms", handlegetliverooms());
+  });
+
+  socket.on("upmsg", ({ msgid, classid, smailid, simage }) => {
+    try {
+      client.hget(`messages:${classid}`, msgid, function (err, reply) {
+        if (reply) {
+          const existingMessage = JSON.parse(reply);
+          existingMessage.upvotes.push({ sm: smailid, si: simage });
+          client.hset(
+            `messages:${classid}`,
+            msgid,
+            JSON.stringify(existingMessage)
+          );
+
+          io.to(classid).emit("upvotedmsg", { msgid, smailid, simage });
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
   });
 
   socket.on("disconnect", async () => {
