@@ -5,6 +5,7 @@ const socketIo = require("socket.io");
 const Clerk = require("@clerk/clerk-sdk-node/cjs/instance").default;
 const { randomUUID } = require("crypto");
 const Redis = require("ioredis");
+const cors = require("cors");
 
 require("dotenv").config();
 
@@ -14,7 +15,6 @@ const io = socketIo(server, {
   cors: {
     origin: "*",
     method: ["GET", "POST"],
-    credentials: true,
   },
 });
 
@@ -23,15 +23,23 @@ const secretKey = process.env.CLERK_SECRET_KEY;
 const clerk = new Clerk({ secretKey: secretKey });
 const port = process.env.PORT || 3002;
 
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+  })
+);
+
+app.post("createSession", (req, res) => {
+  console.log(req.body);
+  res.send(req.body);
+});
+
 io.use(async (socket, next) => {
   const { userId, token } = socket.handshake.auth;
-  // Authentication
-
   if (token && typeof token === "string") {
-    console.log("validating user");
     try {
       socket.user = decodeJwt(token).payload;
-      // console.log(socket.user);
       next();
     } catch (e) {
       console.log("Invalid Token Error ", e);
@@ -57,7 +65,6 @@ const handlegetliverooms = () => {
       return room;
     }
   });
-  // console.log("live", liverooms);
   return liverooms;
 };
 
@@ -78,8 +85,6 @@ io.on("connection", async (socket) => {
         io.to(socket.id).emit("intmsgslist", res);
       }
     });
-
-    // console.log(`${socket.user.umailid} joined class ${classid}`);
   });
 
   socket.on("sendMsg", ({ classid, text }) => {
@@ -107,9 +112,7 @@ io.on("connection", async (socket) => {
     );
   });
 
-  socket.on("getliverooms", () => {
-    socket.emit("liverooms", handlegetliverooms());
-  });
+  io.emit("liverooms", handlegetliverooms());
 
   socket.on("upmsg", ({ msgid, classid, smailid, simage }) => {
     try {
@@ -122,7 +125,6 @@ io.on("connection", async (socket) => {
             msgid,
             JSON.stringify(existingMessage)
           );
-
           io.to(classid).emit("upvotedmsg", { msgid, smailid, simage });
         }
       });
