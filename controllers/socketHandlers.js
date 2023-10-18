@@ -1,8 +1,8 @@
 const { randomUUID } = require("crypto");
 const Redis = require("ioredis");
 
-const handleSendMsg = (classid, text, socket, io) => {
-  const client = new Redis(process.env.REDIS_URL);
+const handleSendMsg = async (classid, text, socket, io) => {
+  const client = await new Redis(process.env.REDIS_URL);
   const msgid = randomUUID();
   let { ufname, uimage, umailid, userid } = socket.user;
   let message = {
@@ -28,7 +28,7 @@ const handleSendMsg = (classid, text, socket, io) => {
 };
 
 const handleMsgUpvote = async (msgid, classid, smailid, simage, io) => {
-  const client = new Redis(process.env.REDIS_URL);
+  const client = await new Redis(process.env.REDIS_URL);
   try {
     await client.hget(`messages:${classid}`, msgid, function (err, reply) {
       if (reply) {
@@ -50,7 +50,7 @@ const handleMsgUpvote = async (msgid, classid, smailid, simage, io) => {
 };
 
 const handleJoinClass = async (classid, io, socket) => {
-  const client = new Redis(process.env.REDIS_URL);
+  const client = await new Redis(process.env.REDIS_URL);
   socket.join(classid);
   socket.classroomid = classid;
   let list = await io.in(classid).fetchSockets();
