@@ -1,8 +1,8 @@
 const { randomUUID } = require("crypto");
 const Redis = require("ioredis");
+const client = new Redis(process.env.REDIS_URL);
 
-const handleSendMsg = async (classid, text, socket, io) => {
-  const client = await new Redis(process.env.REDIS_URL);
+const handleSendMsg = (classid, text, socket, io) => {
   const msgid = randomUUID();
   let { ufname, uimage, umailid, userid } = socket.user;
   let message = {
@@ -23,14 +23,12 @@ const handleSendMsg = async (classid, text, socket, io) => {
     } else {
       io.to(classid).emit("recMsg", message);
     }
-    client.quit();
   });
 };
 
-const handleMsgUpvote = async (msgid, classid, smailid, simage, io) => {
-  const client = await new Redis(process.env.REDIS_URL);
+const handleMsgUpvote = (msgid, classid, smailid, simage, io) => {
   try {
-    await client.hget(`messages:${classid}`, msgid, function (err, reply) {
+    client.hget(`messages:${classid}`, msgid, function (err, reply) {
       if (reply) {
         const existingMessage = JSON.parse(reply);
         existingMessage.upvotes.push({ sm: smailid, si: simage });
@@ -44,13 +42,10 @@ const handleMsgUpvote = async (msgid, classid, smailid, simage, io) => {
     });
   } catch (err) {
     return console.log(err);
-  } finally {
-    client.quit();
   }
 };
 
 const handleJoinClass = async (classid, io, socket) => {
-  const client = await new Redis(process.env.REDIS_URL);
   socket.join(classid);
   socket.classroomid = classid;
   let list = await io.in(classid).fetchSockets();
@@ -73,7 +68,6 @@ const handleJoinClass = async (classid, io, socket) => {
       return null;
     }
   });
-  client.quit();
 };
 
 module.exports = { handleSendMsg, handleMsgUpvote, handleJoinClass };
