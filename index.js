@@ -36,6 +36,7 @@ app.use(
 
 app.use(express.json());
 
+app.get("/", (req, res) => res.status(200).json({ alive: true }));
 app.post("/createSession", apiController.handleCreateSession);
 app.post("/fetchmySessions", apiController.handleFetchSessions);
 
