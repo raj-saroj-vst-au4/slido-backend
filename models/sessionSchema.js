@@ -40,7 +40,7 @@ const sessionSchema = new mongoose.Schema({
   },
   tag: {
     type: String,
-    default: "Undefined",
+    default: "Generic",
   },
   desc: {
     type: String,

@@ -37,7 +37,7 @@ app.use(
 app.use(express.json());
 
 app.post("/createSession", apiController.handleCreateSession);
-app.post("/fetchmysessions", apiController.handleFetchSessions);
+app.post("/fetchmySessions", apiController.handleFetchSessions);
 
 io.use(async (socket, next) => {
   const { userId, token } = socket.handshake.auth;
