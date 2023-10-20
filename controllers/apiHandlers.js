@@ -53,4 +53,7 @@ const handleFetchSessions = async (req, res) => {
     });
 };
 
-module.exports = { handleCreateSession, handleFetchSessions };
+module.exports = {
+  handleCreateSession,
+  handleFetchSessions,
+};

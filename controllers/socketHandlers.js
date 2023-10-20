@@ -11,6 +11,7 @@ const handleSendMsg = (classid, text, socket, io) => {
     from: { ufname, uimage, umailid, userid },
     time: Date.now(),
     upvotes: [],
+    answered: false,
   };
 
   const multi = client.multi();
@@ -32,6 +33,9 @@ const handleSendMsg = (classid, text, socket, io) => {
 const handleMsgUpvote = (msgid, classid, smailid, simage, io) => {
   try {
     client.hget(`messages:${classid}`, msgid, function (err, reply) {
+      if (err) {
+        console.log(err);
+      }
       if (reply) {
         const existingMessage = JSON.parse(reply);
         existingMessage.upvotes.push({ sm: smailid, si: simage });
@@ -73,4 +77,35 @@ const handleJoinClass = async (classid, io, socket) => {
   });
 };
 
-module.exports = { handleSendMsg, handleMsgUpvote, handleJoinClass };
+const handleFlagAnswered = async (ansmsgid, classid, socket) => {
+  try {
+    await client.hget(
+      `messages:${classid}`,
+      ansmsgid,
+      async function (err, reply) {
+        if (err) {
+          console.log(err);
+        }
+        if (reply) {
+          const existingMessage = JSON.parse(reply);
+          existingMessage.answered = true;
+          await client.hset(
+            `messages:${classid}`,
+            ansmsgid,
+            JSON.stringify(existingMessage)
+          );
+          return socket.to(classid).emit("setAnswered", ansmsgid);
+        }
+      }
+    );
+  } catch (err) {
+    return console.log(err);
+  }
+};
+
+module.exports = {
+  handleSendMsg,
+  handleMsgUpvote,
+  handleJoinClass,
+  handleFlagAnswered,
+};

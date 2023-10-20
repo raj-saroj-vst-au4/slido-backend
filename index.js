@@ -68,6 +68,10 @@ io.on("connection", async (socket) => {
     soController.handleMsgUpvote(msgid, classid, smailid, simage, io)
   );
 
+  socket.on("flagAnswered", ({ ansmsgid, classid }) => {
+    soController.handleFlagAnswered(ansmsgid, classid, socket);
+  });
+
   socket.on("disconnect", async () => {
     let list = await io.in(socket.classroomid).fetchSockets();
     let userlist = list.map((sock) => sock.user);
