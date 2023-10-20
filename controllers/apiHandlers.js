@@ -19,7 +19,7 @@ const handleCreateSession = async (req, res) => {
     date,
     time,
     type: participants,
-    customlist: customList,
+    customlist: customList.split(",").map((mail) => mail.trim()),
     tag,
     desc,
   });
@@ -39,10 +39,12 @@ const handleCreateSession = async (req, res) => {
 
 const handleFetchSessions = async (req, res) => {
   const { mailid } = req.body;
+  console.log("my maild", mailid);
   await Session.find({
     $or: [{ type: "open" }, { customlist: mailid }],
   })
     .then((result) => {
+      // console.log(result);
       return res.status(200).send(result);
     })
     .catch((err) => {

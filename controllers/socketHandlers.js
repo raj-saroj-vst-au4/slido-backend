@@ -17,6 +17,9 @@ const handleSendMsg = (classid, text, socket, io) => {
   multi.hset(`messages:${classid}`, msgid, JSON.stringify(message));
   multi.zadd(`messages:${classid}:sorted`, parseFloat(message.time), msgid);
 
+  multi.expire(`messages:${classid}`, 14400);
+  multi.expire(`messages:${classid}:sorted`, 14400);
+
   multi.exec((err, res) => {
     if (err) {
       console.log(err);
