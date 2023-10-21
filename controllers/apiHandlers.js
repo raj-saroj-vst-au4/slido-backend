@@ -39,7 +39,6 @@ const handleCreateSession = async (req, res) => {
 
 const handleFetchSessions = async (req, res) => {
   const { mailid } = req.body;
-  console.log("my maild", mailid);
   await Session.find({
     $or: [{ type: "open" }, { customlist: mailid }],
   })

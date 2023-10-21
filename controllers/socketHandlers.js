@@ -77,30 +77,22 @@ const handleJoinClass = async (classid, io, socket) => {
   });
 };
 
-const handleFlagAnswered = async (ansmsgid, classid, socket) => {
-  try {
-    await client.hget(
-      `messages:${classid}`,
-      ansmsgid,
-      async function (err, reply) {
-        if (err) {
-          console.log(err);
-        }
-        if (reply) {
-          const existingMessage = JSON.parse(reply);
-          existingMessage.answered = true;
-          await client.hset(
-            `messages:${classid}`,
-            ansmsgid,
-            JSON.stringify(existingMessage)
-          );
-          return socket.to(classid).emit("setAnswered", ansmsgid);
-        }
-      }
-    );
-  } catch (err) {
-    return console.log(err);
-  }
+const handleFlagAnswered = async (ansmsgid, classid, io) => {
+  await client.hget(`messages:${classid}`, ansmsgid, async (err, reply) => {
+    if (err) {
+      console.log(err);
+    }
+    if (reply) {
+      const existingMessage = JSON.parse(reply);
+      existingMessage.answered = true;
+      await client.hset(
+        `messages:${classid}`,
+        ansmsgid,
+        JSON.stringify(existingMessage)
+      );
+      return io.to(classid).emit("setAnswered", ansmsgid);
+    }
+  });
 };
 
 module.exports = {

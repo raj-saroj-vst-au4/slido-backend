@@ -69,7 +69,7 @@ io.on("connection", async (socket) => {
   );
 
   socket.on("flagAnswered", ({ ansmsgid, classid }) => {
-    soController.handleFlagAnswered(ansmsgid, classid, socket);
+    soController.handleFlagAnswered(ansmsgid, classid, io);
   });
 
   socket.on("disconnect", async () => {
