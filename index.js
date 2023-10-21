@@ -72,8 +72,8 @@ io.on("connection", async (socket) => {
     soController.handleMsgUpvote(msgid, classid, smailid, simage, io)
   );
 
-  socket.on("flagAnswered", ({ ansmsgid, classid }) => {
-    soController.handleFlagAnswered(ansmsgid, classid, io);
+  socket.on("flagAnswered", ({ ansmsgid, classid, ansindex }) => {
+    soController.handleFlagAnswered(ansmsgid, classid, ansindex, io);
   });
 
   socket.on("disconnect", async () => {

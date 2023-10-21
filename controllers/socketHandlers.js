@@ -11,7 +11,7 @@ const handleSendMsg = (classid, text, socket, io) => {
     from: { ufname, uimage, umailid, userid },
     time: Date.now(),
     upvotes: [],
-    answered: false,
+    answered: 0,
   };
 
   const multi = client.multi();
@@ -77,20 +77,20 @@ const handleJoinClass = async (classid, io, socket) => {
   });
 };
 
-const handleFlagAnswered = async (ansmsgid, classid, io) => {
+const handleFlagAnswered = async (ansmsgid, classid, ansindex, io) => {
   await client.hget(`messages:${classid}`, ansmsgid, async (err, reply) => {
     if (err) {
       console.log(err);
     }
     if (reply) {
       const existingMessage = JSON.parse(reply);
-      existingMessage.answered = true;
+      existingMessage.answered = ansindex;
       await client.hset(
         `messages:${classid}`,
         ansmsgid,
         JSON.stringify(existingMessage)
       );
-      return io.to(classid).emit("setAnswered", ansmsgid);
+      return io.to(classid).emit("setAnswered", { ansmsgid, ansindex });
     }
   });
 };
