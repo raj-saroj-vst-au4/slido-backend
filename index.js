@@ -44,8 +44,12 @@ io.use(async (socket, next) => {
   const { userId, token } = socket.handshake.auth;
   if (token && typeof token === "string") {
     try {
-      socket.user = decodeJwt(token).payload;
-      next();
+      if (socket.user) {
+        next();
+      } else {
+        socket.user = decodeJwt(token).payload;
+        next();
+      }
     } catch (e) {
       console.log("Invalid Token Error ", e);
     }
