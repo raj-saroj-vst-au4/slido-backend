@@ -1,9 +1,9 @@
 const Session = require("./../models/sessionSchema");
 
 const handleCreateSession = async (req, res) => {
-  const { title, pin, date, time, participants, customList, user, tag, desc } =
+  const { title, pin, dateTime, participants, customList, user, tag, desc } =
     req.body;
-  if (!title || !pin || !date || !time || !participants || !user) {
+  if (!title || !pin || !dateTime || !participants || !user) {
     if (participants == "custom" && customList.length < 1) {
       return res.status(400).send("Inappropriate Data");
     }
@@ -16,8 +16,7 @@ const handleCreateSession = async (req, res) => {
     image: user.imageUrl,
     title,
     pin,
-    date,
-    time,
+    dateTime,
     type: participants,
     customlist: customList.split(",").map((mail) => mail.trim()),
     tag,
@@ -27,9 +26,7 @@ const handleCreateSession = async (req, res) => {
   await newSession
     .save()
     .then((createdsess) => {
-      return res
-        .status(200)
-        .send(`${createdsess.title} Created and Scheduled Successfully`);
+      return res.status(200).json(createdsess);
     })
     .catch((e) => {
       console.log("Mongoose error ", e);
@@ -52,7 +49,28 @@ const handleFetchSessions = async (req, res) => {
     });
 };
 
+const handleCheckIsHost = async (req, res) => {
+  const { mailid, classid } = req.body;
+
+  try {
+    await Session.findById(classid)
+      .then((result) => {
+        if (result.email === mailid) {
+          return res.status(201).send({ title: result.title });
+        } else {
+          res.status(401).send("Unauthorized User: Incident Reported");
+        }
+      })
+      .catch((e) => {
+        return res.status(404).send("Session Does not exist or has expired !");
+      });
+  } catch (e) {
+    console.log("mongoose checkishost error", e);
+  }
+};
+
 module.exports = {
   handleCreateSession,
   handleFetchSessions,
+  handleCheckIsHost,
 };

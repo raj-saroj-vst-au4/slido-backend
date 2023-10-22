@@ -22,12 +22,8 @@ const sessionSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  date: {
+  dateTime: {
     type: Date,
-    required: true,
-  },
-  time: {
-    type: String,
     required: true,
   },
   type: {
