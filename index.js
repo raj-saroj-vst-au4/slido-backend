@@ -59,7 +59,7 @@ io.use(async (socket, next) => {
 
 io.on("connection", async (socket) => {
   socket.emit("me", socket.id);
-  io.emit("liverooms", utils.handlegetliverooms(io));
+  socket.emit("liverooms", await utils.handlegetliverooms(io));
 
   socket.once("joinclass", (classid) => {
     soController.handleJoinClass(classid, io, socket);
