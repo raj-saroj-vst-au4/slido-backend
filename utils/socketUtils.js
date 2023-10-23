@@ -1,5 +1,4 @@
 const Session = require("./../models/sessionSchema");
-const mongoose = require("mongoose");
 
 let cachedData = new Map();
 
@@ -40,7 +39,7 @@ const handlegetliverooms = async (io) => {
       } else {
         // console.log("checking for data in db", count++);
         try {
-          const roomId = new mongoose.Types.ObjectId(room.key);
+          const roomId = String(room.key);
           const dbRoomData = await Session.findById(roomId);
 
           if (dbRoomData) {

@@ -58,7 +58,7 @@ const handleCheckIsHost = async (req, res) => {
         if (result.email === mailid) {
           return res.status(201).send({ title: result.title });
         } else {
-          res.status(401).send("Unauthorized User: Incident Reported");
+          return res.status(203).send({ title: result.title });
         }
       })
       .catch((e) => {
